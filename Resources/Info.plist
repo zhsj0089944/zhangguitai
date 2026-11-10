@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key><string>zhanguitai</string>
+    <key>CFBundleIdentifier</key><string>com.cgei.zhanguitai</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
+    <key>CFBundleName</key><string>掌柜台</string>
+    <key>CFBundleDisplayName</key><string>掌柜台</string>
+    <key>CFBundlePackageType</key><string>APPL</string>
+    <key>CFBundleVersion</key><string>0.1.0</string>
+    <key>CFBundleShortVersionString</key><string>0.1.0</string>
+    <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+    <key>LSMinimumSystemVersion</key><string>14.0</string>
+    <key>NSHighResolutionCapable</key><true/>
+    <key>NSHumanReadableCopyright</key><string>MIT License · 掌柜台 contributors</string>
+    <key>LSApplicationCategoryType</key><string>public.app-category.business</string>
+</dict>
+</plist>

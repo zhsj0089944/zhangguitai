@@ -1,0 +1,13 @@
+# 构建产物
+build/
+*.app
+
+# 内部文档（含业务数据，不公开）
+产品审计-*.md
+design/
+
+# macOS
+.DS_Store
+
+# 本机个性化配置
+*.local.xcconfig
