@@ -188,7 +188,20 @@ final class PageSettings: ScrollPage {
         let pick = B("选择…", "folder", style: .plain, size: 11, height: 26,
                      action: { [weak self] in self?.pickRoot() })
         c.add(S.h([path, Flex(), pick], 8))
-        c.add(L.wrap("后台代码和 .env 所在的目录（默认 ~/Documents/xianyu）。换目录后会自动重连新的后台；后台端口不是 8090 的话也要在这里改。",
+
+        let port = Input(String(Cfg.port), placeholder: "8090", width: 90) { [weak self] value in
+            guard let n = Int(value.trimmingCharacters(in: .whitespaces)), (1...65535).contains(n) else {
+                // 非法值不落库，重建一下把框里恢复成当前生效的端口。
+                self?.force()
+                return
+            }
+            Cfg.port = n
+            self?.store.reload(force: true)
+            self?.force()
+        }
+        c.add(Line())
+        c.add(S.h([L("后台端口", 11.5, .medium, color: p.text2), port, Flex()], 8))
+        c.add(L.wrap("后台代码和 .env 所在的目录（默认 ~/Documents/xianyu）。换目录或端口后会自动重连新的后台。",
                      10.5, color: p.text2, width: 700))
         return c
     }
