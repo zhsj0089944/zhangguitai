@@ -222,7 +222,9 @@ final class PageChats: Page {
             rows.append(chatRow(shop, chat))
         }
         if store.sessionMeta.values.contains(where: { $0.hasMore }) {
-            rows.append(L.wrap("平台还有更早的会话没加载（当前最多 200 个）。", 9.5, color: T.p.text2, width: 250))
+            // 这里不写具体条数：limit 调过（200 → 100），写死数字就会变成
+            // 主动告诉用户一个错的数，而且只在「确实超过」的人那儿出现。
+            rows.append(L.wrap("平台还有更早的会话没加载。", 9.5, color: T.p.text2, width: 250))
         }
         listBox.show(rows, gap: 2)
     }

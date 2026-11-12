@@ -226,7 +226,8 @@ final class Api {
     }
 
     /// `limit` 决定服务端要不要翻页：平台单页最多 100 条，要 200 就得打两次平台接口，
-    /// 是流控的主要来源之一。总览/账号页只要「谁在等我」，100 条足够；会话页才要 200。
+    /// 是流控的主要来源之一。所以现在所有页面统一 100 —— 会话页也不再要 200
+    /// （近期的等回会话都在前 100 条里）。
     func sessions(_ shop: String, limit: Int = 100) async throws -> ChatSessionsPayload {
         struct W: Decodable {
             let success: Bool?

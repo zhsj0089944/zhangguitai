@@ -148,7 +148,18 @@ final class Store {
     /// 会话页是否正显示在前台。在会话页时买家消息要跟得上，用 30 秒；
     /// 其余页面（总览/订单只要个待回数）90 秒足够，别拿平台接口刷着玩。
     private var chatPageVisible = false
-    private var sessionsEvery: TimeInterval { chatPageVisible ? 30 : 90 }
+    /// App 是否在前台。被切到后台 / 长时间没人看时，会话列表没必要还按 30 秒打平台。
+    /// 切回来 `resumeAfterBackground()` 会恢复节奏并强制刷一次。
+    private var appActive = true
+    private var sessionsEvery: TimeInterval {
+        if !appActive { return 180 }
+        return chatPageVisible ? 30 : 90
+    }
+    /// 会话页要拉多少条。平台单页上限 100，原来会话页要 200 会让服务端多翻一页，
+    /// 而翻页是 `listNewestPagination` 请求量的主要来源（11-12 实测一天 1211 次）。
+    /// 近期的等回会话都在前 100 条里；更早的只能靠 `has_more` 提示
+    /// （客户端没有翻页入口，`Api.sessions` 不带 cursor）。
+    private let chatPageLimit = 100
     /// 平台流控冷却截止时间（按店）。服务端在冷却期内本来就只返回本地缓存，
     /// 客户端再按固定节奏去问只会让日志刷屏，这里按服务端给的剩余秒数等。
     private var chatBlockedUntil: [String: Date] = [:]
@@ -198,12 +209,20 @@ final class Store {
     /// App Nap 会把 Timer 压到十几分钟才跑一次，此时屏幕上的数字是旧的；
     /// 「切回来看到的就是现在」比省那一次请求重要得多。
     func resumeAfterBackground() {
+        // 回到前台：恢复 30/90 秒节奏，并立刻补一次最新的。
+        appActive = true
         let gap = Date().timeIntervalSince(lastUpdate ?? .distantPast)
         guard gap > 25 else { return }
         // 切回来时把会话节流重置：就算只能拉一次，也要拉最新的。
         sessionsStamp = .distantPast
         chatBlockedUntil = chatBlockedUntil.filter { $0.value > Date() }
         reload(force: true)
+    }
+
+    /// 切到后台。会话列表降到 180 秒 —— 平台请求没必要在没人看的时候继续打，
+    /// 但也不能停（托盘图标上的待回数还要更新）。
+    func enterBackground() {
+        appActive = false
     }
 
     /// 从服务端的「流控冷却中，约 N 秒后自动重试」里把 N 抠出来。
@@ -359,9 +378,9 @@ final class Store {
                     continue
                 }
                 do {
-                    // 会话页要完整列表（200，服务端翻两页），其他页只要个待回数，
-                    // 100 条（平台一次就够）足够，能省掉一半平台请求。
-                    let got = try await Api.shared.sessions(a.id, limit: chatPageVisible ? 200 : 100)
+                    // 两页变一页：平台单页上限 100，原来会话页要 200 会让服务端多翻一页，
+                    // 是 `listNewestPagination` 请求量的主要来源。
+                    let got = try await Api.shared.sessions(a.id, limit: chatPageLimit)
                     if let remoteError = got.remoteError, !remoteError.isEmpty,
                        got.sessions.isEmpty, let old = sessions[a.id], !old.isEmpty {
                         // 远端失败且本地也为空时，别用“空列表”覆盖上一轮真实会话。

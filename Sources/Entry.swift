@@ -75,6 +75,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 Task { @MainActor in self.store.resumeAfterBackground() }
             }
         }
+        // 切到后台时把会话轮询降到 180 秒。App Nap 本来就会把后台 Timer 压到分钟级，
+        // 但那是「系统顺手压的」、不可控也不可预期（接电源/有网络活动时不压）。
+        // 这里显式降速，是让「后台不该按 30 秒打平台」变成确定行为，而不是碰运气。
+        for name in [NSApplication.didResignActiveNotification,
+                     NSWindow.didMiniaturizeNotification] {
+            nc.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                guard let self else { return }
+                Task { @MainActor in self.store.enterBackground() }
+            }
+        }
     }
 
     /// 自渲染截图，核对界面用，不需要录屏权限
